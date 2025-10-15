@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+boto3
+azure-mgmt-resource
+psycopg2-binary
+sqlalchemy
+python-dotenv
+requests
