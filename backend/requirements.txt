@@ -6,3 +6,6 @@ psycopg2-binary
 sqlalchemy
 python-dotenv
 requests
+pytest
+moto
+httpx
