@@ -27,9 +27,9 @@ class GCPScanner(BaseScanner):
                         })
             return instances
         except Exception as e:
-            self._log(f"Error fetching GCP instances: {e}")
+            print("Error fetching GCP instances:", e)
             return []
 
     def scan(self):
-        self._log("Starting GCP VM scan...")
+        print("Starting GCP VM scan...")
         return self.list_instances()

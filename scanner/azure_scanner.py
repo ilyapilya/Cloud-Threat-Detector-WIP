@@ -30,9 +30,9 @@ class AzureScanner(BaseScanner):
                 })
             return instances
         except Exception as e:
-            self._log(f"Error fetching Azure VMs: {e}")
+            print("Error fetching Azure VMs:", e)
             return []
 
     def scan(self):
-        self._log("Starting Azure VM scan...")
+        print("Starting Azure VM scan...")
         return self.list_vms()
