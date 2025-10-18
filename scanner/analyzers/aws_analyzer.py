@@ -5,15 +5,15 @@ class AWSAnalyzer(BaseAnalyzer):
         super().__init__(provider_name="AWS")
     
     def analyze_ec2_instances(self, instances):
-        findings = []
+        threats = []
 
-        for instance in instances:
-            if instance.get("PublicIpAddress"):
-                findings.append({
-                    "id": instance["InstanceId"],
-                    "issue": "Publicly accessible EC2 instance",
-                    "severity": "HIGH"
-                })
-
-        return findings
+        for i in instances:
+            if i.get("PublicIp") and i.get("State") == "running":
+                threats.append(self._format_threat(
+                    "Public EC2 instance running",
+                    "High",
+                    i["InstanceId"]
+                ))
+        
+        return threats
 

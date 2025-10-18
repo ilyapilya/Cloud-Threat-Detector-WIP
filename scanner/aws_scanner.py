@@ -54,11 +54,6 @@ class AWSScanner(BaseAnalyzer):
             print("Error listing EC2 instances:", e)
             return []
 
-    def get_ec2_threat_report(self):
-        instances = self.list_ec2_instances()
-        report = analyze_ec2_instances(instances)
-        return {
-            "total": len(instances),
-            "findings": report
-        }
+    def scan(self):
+        return self.list_ec2_instances()
 
