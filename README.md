@@ -13,3 +13,9 @@ TODO
  - [ ] Database Integration (PostgreSQL)
  - [ ] Vulnerability Scanning
  - [ ] Web Dashboard
+
+
+# Testing
+
+Local orchestration tests are done with Pytest. These tests verify functionality for:
+- AWS EC2 Analyzation (done with Moto / local mock AWS credentials)
