@@ -1,5 +1,8 @@
 import os
 import boto3
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def BaseScanner():
     """
@@ -13,3 +16,9 @@ def BaseScanner():
 
     def scan(self):
         raise NotImplementedError("Scan method must be implemented in subclass")
+    
+    def load_credentials(self):
+        """
+        Loads credentials from .env file
+        """
+        

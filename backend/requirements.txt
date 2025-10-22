@@ -10,6 +10,7 @@ pytest
 moto
 httpx
 requests
+alembic
 google-cloud-compute>=2.0.0
 google-auth>=2.0.0
 pydantic>=1.8.0

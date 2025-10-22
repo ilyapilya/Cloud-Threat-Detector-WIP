@@ -14,22 +14,26 @@ class GCPScanner(BaseScanner):
             client = compute_v1.InstancesClient()
             request = compute_v1.AggregatedListInstancesRequest(project=self.project_id)
             for zone, response in client.aggregated_list(request=request):
-                if "instances" in response:
-                    for instance in response["instances"]:
-                        network_interfaces = instance.network_interfaces
-                        public_ip = None
-                        if network_interfaces and network_interfaces[0].access_configs:
-                            public_ip = network_interfaces[0].access_configs[0].nat_i_p
+                if response.instances:
+                    for instance in response.instances:
                         instances.append({
-                            "InstanceName": instance.name,
-                            "Zone": zone,
-                            "PublicIP": public_ip
+                            'name': instance.name,
+                            'status': instance.status,
+                            'external_ip': instance.network_interfaces[0].access_configs[0].nat_ip
+                            if instance.network_interfaces and instance.network_interfaces[0].access_configs else None,
+                            'network_tags': instance.tags.items if instance.tags else []
                         })
             return instances
         except Exception as e:
             print("Error fetching GCP instances:", e)
             return []
-
+    
+    def get_storage_buckets(self):
+        """
+        Fetches the list of GCP Storage buckets in the project.
+        """
+        client = storage.Client(credentials = self.credentials)
+        
     def scan(self):
         print("Starting GCP VM scan...")
         return self.list_instances()
