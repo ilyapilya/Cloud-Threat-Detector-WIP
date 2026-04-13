@@ -1,31 +1,37 @@
 import os
-import boto3
 from fastapi import FastAPI
-from dotenv import load_dotenv
-import sys
-from pathlib import Path
+from fastapi.middleware.cors import CORSMiddleware
 
-# Add the project root and backend directory to Python path
-project_root = Path(__file__).resolve().parent.parent.parent
-backend_root = Path(__file__).resolve().parent.parent
-sys.path.extend([str(project_root), str(backend_root)])
+from .routes.scan_routes import router as scan_router
 
-from scanner.aws_scanner import list_ec2_instances
-# Change the import to be relative to the current package
-from .routes.cloud_routes import router as cloud_router
+app = FastAPI(
+    title="CloudGuard API",
+    description="Cloud security scanner — detects misconfigurations across AWS, Azure, GCP.",
+    version="0.2.0",
+)
 
-# Load environment variables
-load_dotenv()
+# ── CORS ──────────────────────────────────────────────────────────────────────
+_origins = [
+    "http://localhost:5173",   # Vite dev server
+    "http://localhost:4173",   # Vite preview
+]
+frontend_url = os.getenv("FRONTEND_URL", "")
+if frontend_url:
+    _origins.append(frontend_url)
 
-app = FastAPI(title="Cloud Attack Surface Analyzer")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_origins,
+    allow_origin_regex=r"https://.*\.vercel\.app",
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-@app.get("/")
-def root():
-    return {"message": "Cloud Attack Surface Analyzer API running"}
-
-@app.get("/aws/instances")
-async def get_instances():
-    instances = list_ec2_instances()
-    return {"instances": instances}
+# ── Routes ────────────────────────────────────────────────────────────────────
+app.include_router(scan_router)
 
 
+@app.get("/", tags=["health"])
+def health():
+    return {"status": "ok", "service": "cloudguard-api"}
