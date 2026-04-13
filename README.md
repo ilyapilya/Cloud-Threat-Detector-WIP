@@ -1,7 +1,4 @@
-# Cloud-Threat-Detector
-
-## NOTE: 
-### THIS IS A WORK IN PROGRESS, CURRENTLY IN THE BACKEND DEV AND DATABASE INTEGRATION PHASE
+# Cloud-Threat-Detector [WIP]
 
 A tool that automatically scans and detects vulnerabilities in cloud platforms. This tool is intended to assess the security posture and detect anomalous behavior and threats with monitoring and alerting.
 
