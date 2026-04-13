@@ -31,7 +31,7 @@ export default function Hero() {
         {/* Headline */}
         <h1 className="mb-6 text-4xl font-extrabold leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl">
           Stop Cloud Misconfigurations{' '}
-          <span className="text-gradient">Before Attackers Do</span>
+          <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">Before Attackers Do</span>
         </h1>
 
         {/* Subheadline */}

@@ -37,7 +37,7 @@ export default function HowItWorks() {
           </p>
           <h2 className="text-3xl font-bold text-white sm:text-4xl">
             Enterprise-grade security in{' '}
-            <span className="text-gradient">3 simple steps</span>
+            <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">3 simple steps</span>
           </h2>
         </div>
 
