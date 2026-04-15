@@ -19,15 +19,23 @@ This project (Cloud-Threat-Detector) is being productized as "CloudGuard" — a 
 
 **How to apply:** All frontend work lives in `web/`. Backend API work lives in `backend/`. Supabase schema is in `supabase/schema.sql`.
 
-**Current state (Day 1 complete):**
-- `web/` scaffolded: React + Tailwind + shadcn/ui, landing page live, Clerk/Supabase stubs
-- `supabase/schema.sql` created (users, scans, findings, waitlist tables with RLS)
-- Auth pages ready — waiting for VITE_CLERK_PUBLISHABLE_KEY
-- Waitlist form ready — waiting for Supabase project keys
+**Live URLs:**
+- Frontend (Vercel): cloudguard.vercel.app (or similar)
+- Backend (Railway): https://cloudguard-production.up.railway.app
 
-**Remaining manual steps before landing page goes live:**
-1. Create Supabase project → run supabase/schema.sql → copy URL + anon key to web/.env
-2. Create Clerk account → copy publishable key to web/.env
-3. Push to GitHub → connect to Vercel → deploy
+**Current state (Day 2 complete):**
+- Backend live on Railway at https://cloudguard-production.up.railway.app
+- 14 AWS security checks implemented in `backend/app/scanner/aws_checks.py`
+- API endpoints: POST /api/v1/scan, GET /api/v1/scan/{id}, GET /api/v1/scan/{id}/findings
+- Async background scan with scoring (A-F grade)
+- DB connected to Supabase (DATABASE_URL set in Railway)
+- Supabase migration run: user_id nullable on scans table
+
+**Day 3 TODO — Results Dashboard:**
+- Add VITE_API_URL=https://cloudguard-production.up.railway.app to Vercel env vars
+- Build credential input page (AWS key + secret + region form)
+- Build scan results page (findings list, severity badges, score/grade)
+- Build scan history page
+- Wire frontend → backend end-to-end
 
 **Pricing model:** Free (5 findings/scan) | Pro $29/mo (unlimited + AI remediation)
