@@ -21,6 +21,17 @@ class Scan(Base):
     notify_email  = Column(Text, nullable=True)
 
 
+class User(Base):
+    __tablename__ = "users"
+
+    id                 = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    clerk_id           = Column(String(255), unique=True, nullable=False)
+    email              = Column(Text, nullable=True)
+    plan               = Column(String(20), nullable=False, default="free")
+    stripe_customer_id = Column(Text, nullable=True)
+    created_at         = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+
 class Finding(Base):
     __tablename__ = "findings"
 

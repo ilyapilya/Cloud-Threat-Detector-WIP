@@ -10,7 +10,8 @@ const SEVERITY_COLORS = {
   info:     'text-slate-400',
 }
 
-// Groups sorted findings by severity for section headers
+const FREE_TIER_LIMIT = 5  // findings beyond this index require Pro for AI fix
+
 function groupBySeverity(findings) {
   const sorted = [...findings].sort(
     (a, b) => (SEVERITY_ORDER[a.severity] ?? 5) - (SEVERITY_ORDER[b.severity] ?? 5)
@@ -23,7 +24,8 @@ function groupBySeverity(findings) {
   }, {})
 }
 
-export default function FindingsList({ findings = [], isLocked = false }) {
+// isPro: true if the user has a Pro plan — unlocks AI fix for all findings
+export default function FindingsList({ findings = [], isPro = false }) {
   if (findings.length === 0) {
     return (
       <div className="flex flex-col items-center gap-3 rounded-xl border border-green-500/20 bg-green-500/5 py-12 text-center">
@@ -43,7 +45,6 @@ export default function FindingsList({ findings = [], isLocked = false }) {
     <div className="space-y-8">
       {severityKeys.map(severity => (
         <div key={severity}>
-          {/* Section header */}
           <div className="mb-3 flex items-center gap-3">
             <h3 className={`text-sm font-bold uppercase tracking-widest ${SEVERITY_COLORS[severity]}`}>
               {SEVERITY_LABELS[severity]}
@@ -54,15 +55,14 @@ export default function FindingsList({ findings = [], isLocked = false }) {
             <div className="h-px flex-1 bg-slate-800" />
           </div>
 
-          {/* Finding cards */}
           <div className="space-y-2">
             {groups[severity].map(finding => {
               const idx = cardIndex++
+              const isLocked = !isPro && idx >= FREE_TIER_LIMIT
               return (
                 <FindingCard
                   key={finding.id}
                   finding={finding}
-                  index={idx}
                   isLocked={isLocked}
                 />
               )
@@ -73,6 +73,11 @@ export default function FindingsList({ findings = [], isLocked = false }) {
 
       <p className="text-center text-xs text-slate-600">
         {findings.length} total findings · sorted by severity
+        {!isPro && findings.length > FREE_TIER_LIMIT && (
+          <span className="ml-2 text-cyan-600">
+            · AI fix available for first {FREE_TIER_LIMIT} on free plan
+          </span>
+        )}
       </p>
     </div>
   )

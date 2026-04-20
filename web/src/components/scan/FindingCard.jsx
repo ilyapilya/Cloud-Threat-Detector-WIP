@@ -1,12 +1,10 @@
 import { useState } from 'react'
-import { ChevronDown, ChevronUp, Wand2, Lock } from 'lucide-react'
+import { ChevronDown, ChevronUp, Lock } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import RemediationPanel from './RemediationPanel'
 
-const SEVERITY_ORDER = { critical: 0, high: 1, medium: 2, low: 3, info: 4 }
-
-// Maps severity → Badge variant (matches our badge.jsx)
 const SEVERITY_VARIANT = {
   critical: 'critical',
   high:     'high',
@@ -15,7 +13,8 @@ const SEVERITY_VARIANT = {
   info:     'secondary',
 }
 
-export default function FindingCard({ finding, index, isLocked = false }) {
+// Free tier: first 5 findings get AI fix. isLocked=true shows the upgrade CTA instead.
+export default function FindingCard({ finding, isLocked = false }) {
   const [expanded, setExpanded] = useState(false)
 
   return (
@@ -42,7 +41,7 @@ export default function FindingCard({ finding, index, isLocked = false }) {
           <p className="mt-1 font-mono text-xs text-slate-500 truncate">
             {finding.resource_id}
             {finding.resource_type && <span className="ml-2 text-slate-600">· {finding.resource_type}</span>}
-            {finding.region       && <span className="ml-2 text-slate-600">· {finding.region}</span>}
+            {finding.region        && <span className="ml-2 text-slate-600">· {finding.region}</span>}
           </p>
         </div>
 
@@ -58,26 +57,30 @@ export default function FindingCard({ finding, index, isLocked = false }) {
             <p className="mb-4 text-sm text-slate-300 leading-relaxed">{finding.description}</p>
           )}
 
-          {/* AI Fix button — stub, locked until Day 5 */}
           {isLocked ? (
-            <div className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-800/40 px-4 py-2.5">
-              <Lock className="h-4 w-4 text-slate-500" />
-              <span className="text-sm text-slate-500">AI remediation available on</span>
-              <span className="text-sm font-semibold text-cyan-400">Pro</span>
+            /* Pro paywall */
+            <div className="relative">
+              <div className="pointer-events-none select-none rounded-xl border border-slate-700 bg-slate-800/40 p-4 blur-sm">
+                <p className="text-sm text-slate-300">Step 1: Go to the AWS Console…</p>
+                <p className="mt-2 font-mono text-xs text-green-400">aws s3api put-public-access-block…</p>
+              </div>
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-xl bg-slate-950/70 backdrop-blur-sm">
+                <Lock className="h-5 w-5 text-slate-400" />
+                <p className="text-sm font-medium text-white">AI fixes are a Pro feature</p>
+                <Button
+                  size="sm"
+                  className="bg-cyan-400 text-slate-950 hover:bg-cyan-300"
+                  onClick={e => {
+                    e.stopPropagation()
+                    window.dispatchEvent(new CustomEvent('cloudguard:upgrade'))
+                  }}
+                >
+                  Upgrade to Pro — $29/mo
+                </Button>
+              </div>
             </div>
           ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2 border-cyan-500/30 text-cyan-400 hover:bg-cyan-400/5 hover:border-cyan-400/50"
-              disabled
-            >
-              <Wand2 className="h-3.5 w-3.5" />
-              Show AI Fix
-              <span className="rounded-full bg-cyan-400/10 px-1.5 py-0.5 text-[10px] font-semibold text-cyan-400">
-                Coming Day 5
-              </span>
-            </Button>
+            <RemediationPanel finding={finding} />
           )}
         </div>
       )}

@@ -7,14 +7,16 @@ import Dashboard  from './pages/Dashboard'
 import NewScan    from './pages/NewScan'
 import ScanResults from './pages/ScanResults'
 import History    from './pages/History'
+import Share      from './pages/Share'
 
 export default function App() {
   return (
     <Routes>
       {/* Public */}
-      <Route path="/"          element={<Landing />} />
-      <Route path="/sign-in/*" element={<SignInPage />} />
-      <Route path="/sign-up/*" element={<SignUpPage />} />
+      <Route path="/"            element={<Landing />} />
+      <Route path="/sign-in/*"   element={<SignInPage />} />
+      <Route path="/sign-up/*"   element={<SignUpPage />} />
+      <Route path="/share/:id"   element={<Share />} />
 
       {/* Protected */}
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

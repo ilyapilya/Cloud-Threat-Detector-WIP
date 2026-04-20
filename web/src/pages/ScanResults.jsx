@@ -1,29 +1,33 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { AlertTriangle, ArrowLeft, RefreshCw } from 'lucide-react'
+import { useAuth, useUser } from '@clerk/clerk-react'
+import { AlertTriangle, ArrowLeft, RefreshCw, Share2 } from 'lucide-react'
 import AppNav from '@/components/AppNav'
 import ScanProgress from '@/components/scan/ScanProgress'
 import ScoreCard from '@/components/scan/ScoreCard'
 import FindingsList from '@/components/scan/FindingsList'
 import { Button } from '@/components/ui/button'
-import { getScan, getScanFindings } from '@/lib/api'
+import { getScan, getScanFindings, getMe, createCheckout } from '@/lib/api'
 
 const POLL_INTERVAL_MS = 2000
 const TIMEOUT_S        = 120
 
 export default function ScanResults() {
-  const { id: scanId } = useParams()
+  const { id: scanId }   = useParams()
+  const { getToken }     = useAuth()
+  const { user }         = useUser()
 
   const [scan,     setScan]     = useState(null)
   const [findings, setFindings] = useState([])
   const [elapsed,  setElapsed]  = useState(0)
   const [timedOut, setTimedOut] = useState(false)
   const [error,    setError]    = useState(null)
+  const [isPro,    setIsPro]    = useState(false)
+  const [upgrading, setUpgrading] = useState(false)
 
   const intervalRef = useRef(null)
-  const elapsedRef  = useRef(0)  // mutable ref avoids stale closure in interval
+  const elapsedRef  = useRef(0)
 
-  // Load findings once scan completes
   async function loadFindings(currentScan) {
     try {
       const data = await getScanFindings(currentScan.id)
@@ -40,10 +44,34 @@ export default function ScanResults() {
     }
   }
 
+  // Fetch user plan
+  useEffect(() => {
+    getMe(getToken)
+      .then(data => setIsPro(data.plan === 'pro'))
+      .catch(() => {})
+  }, [getToken])
+
+  // Listen for upgrade events dispatched from FindingCard paywall CTA
+  const handleUpgrade = useCallback(async () => {
+    if (!user?.primaryEmailAddress?.emailAddress) return
+    setUpgrading(true)
+    try {
+      const { url } = await createCheckout(user.primaryEmailAddress.emailAddress, getToken)
+      window.location.href = url
+    } catch (err) {
+      alert(`Checkout error: ${err.message}`)
+      setUpgrading(false)
+    }
+  }, [getToken, user])
+
+  useEffect(() => {
+    window.addEventListener('cloudguard:upgrade', handleUpgrade)
+    return () => window.removeEventListener('cloudguard:upgrade', handleUpgrade)
+  }, [handleUpgrade])
+
   useEffect(() => {
     if (!scanId) return
 
-    // Initial fetch — if already completed, skip polling entirely
     getScan(scanId)
       .then(async initial => {
         setScan(initial)
@@ -52,7 +80,6 @@ export default function ScanResults() {
         } else if (initial.status === 'failed') {
           setError(initial.error_msg ?? 'Scan failed.')
         } else {
-          // Start polling
           intervalRef.current = setInterval(async () => {
             elapsedRef.current += POLL_INTERVAL_MS / 1000
             setElapsed(elapsedRef.current)
@@ -66,7 +93,6 @@ export default function ScanResults() {
             try {
               const updated = await getScan(scanId)
               setScan(updated)
-
               if (updated.status === 'completed') {
                 stopPolling()
                 await loadFindings(updated)
@@ -75,7 +101,6 @@ export default function ScanResults() {
                 setError(updated.error_msg ?? 'Scan failed.')
               }
             } catch (err) {
-              // Network blip — keep polling, don't abort
               console.warn('Poll error:', err.message)
             }
           }, POLL_INTERVAL_MS)
@@ -83,16 +108,25 @@ export default function ScanResults() {
       })
       .catch(err => setError(err.message))
 
-    return stopPolling  // cleanup on unmount
+    return stopPolling
   }, [scanId])
 
-  // ── Render states ────────────────────────────────────────────────────────
-
   const isPolling = scan && (scan.status === 'pending' || scan.status === 'running')
+  const shareUrl  = `${window.location.origin}/share/${scanId}`
 
   return (
     <div className="min-h-screen bg-slate-950">
       <AppNav />
+
+      {/* Upgrade overlay */}
+      {upgrading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-3 text-white">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-cyan-400 border-t-transparent" />
+            <p className="text-sm text-slate-400">Redirecting to checkout…</p>
+          </div>
+        </div>
+      )}
 
       <main className="mx-auto max-w-4xl px-4 pt-20 pb-16 sm:px-6">
         {/* Back link */}
@@ -144,7 +178,21 @@ export default function ScanResults() {
         {!error && !timedOut && scan?.status === 'completed' && (
           <div className="space-y-8">
             <div>
-              <h1 className="mb-4 text-2xl font-bold text-white">Scan Results</h1>
+              <div className="mb-4 flex items-center justify-between">
+                <h1 className="text-2xl font-bold text-white">Scan Results</h1>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 text-slate-400"
+                  onClick={() => {
+                    navigator.clipboard.writeText(shareUrl)
+                    alert('Share link copied!')
+                  }}
+                >
+                  <Share2 className="h-3.5 w-3.5" />
+                  Share
+                </Button>
+              </div>
               <ScoreCard scan={scan} findings={findings} />
             </div>
 
@@ -157,7 +205,7 @@ export default function ScanResults() {
                   </span>
                 )}
               </h2>
-              <FindingsList findings={findings} isLocked={false} />
+              <FindingsList findings={findings} isPro={isPro} />
             </div>
           </div>
         )}

@@ -6,6 +6,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .routes.scan_routes import router as scan_router
 from .routes.schedule_routes import router as schedule_router
+from .routes.remediation_routes import router as remediation_router
+from .routes.stripe_routes import router as stripe_router
+from .routes.webhook_routes import router as webhook_router
 from .services.scheduler import start_scheduler, stop_scheduler
 
 logger = logging.getLogger(__name__)
@@ -46,6 +49,9 @@ app.add_middleware(
 # ── Routes ────────────────────────────────────────────────────────────────────
 app.include_router(scan_router)
 app.include_router(schedule_router)
+app.include_router(remediation_router)
+app.include_router(stripe_router)
+app.include_router(webhook_router)
 
 
 @app.get("/", tags=["health"])

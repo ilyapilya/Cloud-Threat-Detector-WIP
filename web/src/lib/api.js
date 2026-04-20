@@ -57,6 +57,29 @@ export function scheduleScan(scanId, email, notify_weekly, getToken) {
   })
 }
 
+// POST /api/v1/findings/:id/remediate
+export function getRemediation(findingId, getToken) {
+  return authRequest(`/api/v1/findings/${findingId}/remediate`, getToken, { method: 'POST' })
+}
+
+// GET /api/v1/me
+export function getMe(getToken) {
+  return authRequest('/api/v1/me', getToken)
+}
+
+// POST /api/v1/stripe/checkout
+export function createCheckout(email, getToken) {
+  return authRequest('/api/v1/stripe/checkout', getToken, {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  })
+}
+
+// GET /api/v1/scan/:id/findings (public — for share page)
+export function getPublicScanFindings(scanId) {
+  return request(`/api/v1/scan/${scanId}/findings`)
+}
+
 // ── localStorage scan history (fallback for unauthenticated users) ─────────────
 const HISTORY_KEY = 'cg_recent_scans'
 const MAX_HISTORY = 10
