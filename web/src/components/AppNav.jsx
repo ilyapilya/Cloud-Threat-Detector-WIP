@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils'
 
 const navLinks = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { label: 'History',   href: '/history',   icon: History, soon: true },
+  { label: 'History',   href: '/history',   icon: History },
 ]
 
 export default function AppNav() {
@@ -57,7 +57,7 @@ export default function AppNav() {
               New Scan
             </Link>
           </Button>
-          <UserButton afterSignOutUrl="/" />
+          <UserButton />
         </div>
       </div>
     </nav>

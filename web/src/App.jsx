@@ -6,6 +6,7 @@ import SignUpPage from './pages/SignUp'
 import Dashboard  from './pages/Dashboard'
 import NewScan    from './pages/NewScan'
 import ScanResults from './pages/ScanResults'
+import History    from './pages/History'
 
 export default function App() {
   return (
@@ -19,6 +20,7 @@ export default function App() {
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/scan/new"  element={<ProtectedRoute><NewScan /></ProtectedRoute>} />
       <Route path="/scan/:id"  element={<ProtectedRoute><ScanResults /></ProtectedRoute>} />
+      <Route path="/history"   element={<ProtectedRoute><History /></ProtectedRoute>} />
     </Routes>
   )
 }

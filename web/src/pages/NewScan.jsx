@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '@clerk/clerk-react'
 import { Shield } from 'lucide-react'
 import AppNav from '@/components/AppNav'
 import CredentialForm from '@/components/scan/CredentialForm'
 import { createScan, saveToHistory } from '@/lib/api'
 
 export default function NewScan() {
-  const navigate  = useNavigate()
+  const navigate     = useNavigate()
+  const { getToken } = useAuth()
   const [loading, setLoading] = useState(false)
   const [error,   setError]   = useState(null)
 
@@ -14,7 +16,7 @@ export default function NewScan() {
     setLoading(true)
     setError(null)
     try {
-      const scan = await createScan(credentials)
+      const scan = await createScan(credentials, getToken)
       saveToHistory(scan)
       navigate(`/scan/${scan.id}`)
     } catch (err) {

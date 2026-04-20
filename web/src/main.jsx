@@ -12,7 +12,7 @@ const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
 // but ClerkProvider only wraps the app when a key is present.
 // Without the key, auth pages show a "not configured" state.
 const tree = PUBLISHABLE_KEY ? (
-  <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
+  <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
     <App />
   </ClerkProvider>
 ) : (

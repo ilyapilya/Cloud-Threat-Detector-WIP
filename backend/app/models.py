@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, Integer, Text, DateTime
+from sqlalchemy import Column, String, Integer, Text, DateTime, Boolean
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from .database import Base
 
@@ -15,8 +15,10 @@ class Scan(Base):
     score        = Column(Integer, nullable=True)
     grade        = Column(String(1), nullable=True)
     error_msg    = Column(Text, nullable=True)
-    created_at   = Column(DateTime, nullable=False, default=datetime.utcnow)
-    completed_at = Column(DateTime, nullable=True)
+    created_at    = Column(DateTime, nullable=False, default=datetime.utcnow)
+    completed_at  = Column(DateTime, nullable=True)
+    notify_weekly = Column(Boolean, nullable=False, default=False)
+    notify_email  = Column(Text, nullable=True)
 
 
 class Finding(Base):

@@ -12,9 +12,9 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from ..database import SessionLocal
-from ..deps import get_db
+from ..deps import get_db, get_optional_user_id
 from ..models import Scan, Finding
-from ..schemas import ScanRequest, ScanOut, ScanWithFindings, FindingOut
+from ..schemas import ScanRequest, ScanOut, ScanWithFindings, FindingOut, ScanListOut
 from ..scanner.aws_checks import validate_credentials, run_aws_checks, calculate_score
 
 router = APIRouter(prefix="/api/v1")
@@ -60,11 +60,41 @@ def _execute_scan(scan_id: str, creds: dict, region: str) -> None:
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────
 
+@router.get("/scans", response_model=ScanListOut)
+def list_scans(
+    db: Session = Depends(get_db),
+    user_id: str = Depends(get_optional_user_id),
+):
+    """Return all scans for the authenticated user, newest first."""
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Authentication required.")
+
+    scans = (
+        db.query(Scan)
+        .filter(Scan.user_id == user_id)
+        .order_by(Scan.created_at.desc())
+        .all()
+    )
+
+    scan_outs = []
+    for scan in scans:
+        findings_count = (
+            db.query(Finding).filter(Finding.scan_id == str(scan.id)).count()
+            if scan.status == "completed" else None
+        )
+        out = ScanOut.model_validate(scan)
+        out.findings_count = findings_count
+        scan_outs.append(out)
+
+    return ScanListOut(scans=scan_outs, total=len(scan_outs))
+
+
 @router.post("/scan", response_model=ScanOut, status_code=202)
 def create_scan(
     body: ScanRequest,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
+    user_id: str = Depends(get_optional_user_id),
 ):
     """
     Validate AWS credentials, create a scan record, kick off async checks.
@@ -81,7 +111,7 @@ def create_scan(
             detail=f"AWS credential validation failed: {arn_or_err}",
         )
 
-    scan = Scan(provider=body.provider)
+    scan = Scan(provider=body.provider, user_id=user_id)
     db.add(scan)
     db.commit()
     db.refresh(scan)

@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Plus, ArrowRight, Shield, Clock } from 'lucide-react'
+import { useAuth } from '@clerk/clerk-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import AppNav from '@/components/AppNav'
-import { getHistory, getScan } from '@/lib/api'
+import { listScans } from '@/lib/api'
 
 const GRADE_COLOR = {
   A: 'text-green-400',
@@ -14,45 +15,34 @@ const GRADE_COLOR = {
   F: 'text-red-400',
 }
 
-function RecentScanRow({ entry }) {
-  const [scan, setScan] = useState(null)
-
-  useEffect(() => {
-    getScan(entry.id)
-      .then(setScan)
-      .catch(() => null)
-  }, [entry.id])
-
-  const gradeColor = GRADE_COLOR[scan?.grade] ?? 'text-slate-400'
+function RecentScanRow({ scan }) {
+  const gradeColor = GRADE_COLOR[scan.grade] ?? 'text-slate-400'
 
   return (
     <Link
-      to={`/scan/${entry.id}`}
+      to={`/scan/${scan.id}`}
       className="flex items-center gap-4 rounded-xl border border-slate-800 bg-slate-900/50 px-5 py-4 transition-colors hover:bg-slate-800/60 hover:border-slate-700"
     >
-      {/* Grade */}
       <div className={`w-10 text-center text-2xl font-black ${gradeColor}`}>
-        {scan?.grade ?? '—'}
+        {scan.grade ?? '—'}
       </div>
 
-      {/* Details */}
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-white">
-          {scan?.provider?.toUpperCase() ?? 'AWS'} Scan
+          {scan.provider?.toUpperCase() ?? 'AWS'} Scan
         </p>
         <p className="text-xs text-slate-500">
-          {new Date(entry.createdAt).toLocaleString()}
+          {new Date(scan.created_at).toLocaleString()}
         </p>
       </div>
 
-      {/* Status / findings count */}
       <div className="flex items-center gap-3">
-        {scan?.status === 'completed' && scan.findings_count != null && (
+        {scan.status === 'completed' && scan.findings_count != null && (
           <span className="text-sm text-slate-400">{scan.findings_count} findings</span>
         )}
-        {scan?.status === 'running' || scan?.status === 'pending' ? (
+        {(scan.status === 'running' || scan.status === 'pending') ? (
           <Badge variant="default" className="animate-pulse">Running</Badge>
-        ) : scan?.status === 'failed' ? (
+        ) : scan.status === 'failed' ? (
           <Badge variant="critical">Failed</Badge>
         ) : null}
         <ArrowRight className="h-4 w-4 text-slate-600" />
@@ -62,7 +52,18 @@ function RecentScanRow({ entry }) {
 }
 
 export default function Dashboard() {
-  const history = getHistory()
+  const { getToken }          = useAuth()
+  const [scans,   setScans]   = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    listScans(getToken)
+      .then(data => setScans(data.scans ?? []))
+      .catch(() => setScans([]))
+      .finally(() => setLoading(false))
+  }, [getToken])
+
+  const recentScans = scans.slice(0, 5)
 
   return (
     <div className="min-h-screen bg-slate-950">
@@ -83,7 +84,13 @@ export default function Dashboard() {
           </Button>
         </div>
 
-        {history.length === 0 ? (
+        {loading ? (
+          <div className="space-y-2">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="h-16 rounded-xl border border-slate-800 bg-slate-900/50 animate-pulse" />
+            ))}
+          </div>
+        ) : scans.length === 0 ? (
           /* ── Empty state ── */
           <div className="flex flex-col items-center gap-6 rounded-2xl border border-dashed border-slate-700 py-20 text-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-900 ring-1 ring-slate-700">
@@ -106,13 +113,20 @@ export default function Dashboard() {
         ) : (
           /* ── Recent scans ── */
           <div>
-            <div className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-500">
-              <Clock className="h-3.5 w-3.5" />
-              Recent Scans
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-500">
+                <Clock className="h-3.5 w-3.5" />
+                Recent Scans
+              </div>
+              {scans.length > 5 && (
+                <Link to="/history" className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors">
+                  View all {scans.length} →
+                </Link>
+              )}
             </div>
             <div className="space-y-2">
-              {history.map(entry => (
-                <RecentScanRow key={entry.id} entry={entry} />
+              {recentScans.map(scan => (
+                <RecentScanRow key={scan.id} scan={scan} />
               ))}
             </div>
           </div>

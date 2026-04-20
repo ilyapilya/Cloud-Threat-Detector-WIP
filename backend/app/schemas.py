@@ -48,3 +48,13 @@ class ScanOut(BaseModel):
 
 class ScanWithFindings(ScanOut):
     findings: List[FindingOut] = []
+
+
+class ScheduleRequest(BaseModel):
+    notify_weekly: bool
+    notify_email:  str = Field(..., min_length=3)
+
+
+class ScanListOut(BaseModel):
+    scans: List[ScanOut]
+    total: int
